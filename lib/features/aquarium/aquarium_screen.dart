@@ -26,6 +26,10 @@ class _AquariumScreenState extends ConsumerState<AquariumScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 바텀 네비(아이콘 줄) 영역 높이 = 세이프에어리어 + 패딩 + 아이콘/라벨.
+    // 금붕어가 이 아래로 못 내려가게 게임에 전달.
+    _game.bottomUiInset = MediaQuery.of(context).padding.bottom + 64;
+
     return Scaffold(
       body: Stack(
         children: [

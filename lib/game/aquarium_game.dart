@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flame/game.dart';
 import 'package:flutter/widgets.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 
 import '../data/models/species.dart';
+import 'behaviors/tilt_response.dart';
 import 'components/fish_component.dart';
 import 'components/water_effects.dart';
 
@@ -19,7 +23,16 @@ class AquariumGame extends FlameGame {
   final Species species;
 
   late FishComponent _fish;
+  late WaterEffects _water;
   bool _ready = false;
+
+  // 기울기(가속도계) 반응.
+  final TiltResponse _tilt = TiltResponse();
+  StreamSubscription<AccelerometerEvent>? _accelSub;
+
+  /// 화면 위젯(aquarium_screen)에서 주입하는 바텀 네비 영역 높이(px).
+  /// 금붕어가 그 아래로 못 내려가게 한다.
+  double bottomUiInset = 0;
 
   @override
   Color backgroundColor() => const Color(0xFF0A1A2F);
@@ -28,7 +41,8 @@ class AquariumGame extends FlameGame {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    add(WaterEffects());
+    _water = WaterEffects();
+    add(_water);
 
     _fish = FishComponent(
       species: species,
@@ -36,7 +50,40 @@ class AquariumGame extends FlameGame {
     );
     add(_fish);
 
+    // 가속도계 구독(중력 포함). 시뮬레이터엔 센서가 없어 콜백이 안 와도
+    // gravity는 0으로 유지되어 안전하다.
+    _accelSub = accelerometerEventStream(
+      samplingPeriod: SensorInterval.gameInterval, // 부드러운 틸트용 ~50Hz
+    ).listen(
+      (e) => _tilt.setFromAccelerometer(e.x, e.y, e.z),
+      onError: (_) {}, // 센서 미지원 시 조용히 무시
+      cancelOnError: false,
+    );
+
     _ready = true;
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    if (_ready) {
+      _fish.gravity = _tilt.gravity; // 금붕어 쏠림
+      _water.gravity = _tilt.gravity; // 수면·거품 쏠림
+
+      // 헤엄 영역: 수면 아래(+버퍼) ~ 바텀 네비 위.
+      final h = size.y;
+      final top = h * WaterEffects.surfaceFrac + 8;
+      final bottom = h - bottomUiInset;
+      _fish.setSwimArea(top, bottom > top ? bottom : h - _edgeFallback);
+    }
+  }
+
+  static const double _edgeFallback = 80;
+
+  @override
+  void onRemove() {
+    _accelSub?.cancel();
+    super.onRemove();
   }
 
   /// 짧은 탭 → 그 지점으로 다가옴.

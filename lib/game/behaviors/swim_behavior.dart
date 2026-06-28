@@ -22,6 +22,31 @@ class SwimBehavior {
   /// 속도 배율(기분/호흡 페이즈에서 주입). 1.0 = 평상시.
   double speedFactor = 1.0;
 
+  /// 기울기 중력 벡터(px/s). 매 프레임 위치에 더해 쏠림을 만든다. 평온 시 0.
+  Vector2 gravity = Vector2.zero();
+
+  /// 화면 밖으로 못 나가게 두는 가장자리 여백(px).
+  static const double _edge = 16.0;
+
+  // 헤엄 가능 영역(절대 좌표). 게임에서 주입(수면 아래 ~ 바텀 네비 위).
+  // 0이면 미설정 → 화면 경계(_edge)로 폴백.
+  double minY = 0; // 위 한계(수면)
+  double maxY = 0; // 아래 한계(바텀 네비 위)
+  double sideInset = 24; // 좌우 여백
+
+  double _top(Vector2 bounds) => minY > 0 ? minY : _edge;
+  double _bottom(Vector2 bounds) => maxY > 0 ? maxY : bounds.y - _edge;
+
+  /// 점을 헤엄 영역 안으로 클램프(터치 목표 등에 사용).
+  Vector2 clampToArea(Vector2 p, Vector2 bounds) {
+    final lo = min(_top(bounds), _bottom(bounds));
+    final hi = max(_top(bounds), _bottom(bounds));
+    return Vector2(
+      p.x.clamp(sideInset, bounds.x - sideInset),
+      p.y.clamp(lo, hi),
+    );
+  }
+
   /// 목표 도달 판정 반경(px). 이 안에 들면 도착으로 보고 즉시 새 목표 지정.
   static const double _arrivalRadius = 14.0;
 
@@ -52,10 +77,12 @@ class SwimBehavior {
       _overrideTarget ?? (_hasTarget ? _target.clone() : null);
 
   void _pickTarget(Vector2 bounds) {
-    const margin = 24.0;
+    final top = _top(bounds);
+    final bottom = _bottom(bounds);
+    final span = max(bottom - top, 1.0);
     _target = Vector2(
-      margin + _rng.nextDouble() * (bounds.x - margin * 2),
-      margin + _rng.nextDouble() * (bounds.y - margin * 2),
+      sideInset + _rng.nextDouble() * (bounds.x - sideInset * 2),
+      top + _rng.nextDouble() * span,
     );
     _hasTarget = true;
   }
@@ -101,6 +128,17 @@ class SwimBehavior {
       position.add(dir * step);
       _lastHeading = atan2(dir.y, dir.x);
     }
+
+    // 기울기 쏠림: 중력 방향으로 추가 드리프트.
+    if (gravity.length2 > 0) {
+      position.add(gravity * dt);
+    }
+
+    // 어떤 경우에도 헤엄 영역(수면 아래 ~ 바텀 네비 위) 안에 유지.
+    final lo = min(_top(bounds), _bottom(bounds));
+    final hi = max(_top(bounds), _bottom(bounds));
+    position.x = position.x.clamp(sideInset, bounds.x - sideInset);
+    position.y = position.y.clamp(lo, hi);
 
     return _lastHeading;
   }

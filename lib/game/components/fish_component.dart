@@ -29,6 +29,9 @@ class FishComponent extends PositionComponent {
   Mood mood;
   final bool debug;
 
+  /// 기울기 중력 벡터(게임에서 매 프레임 주입). 평온 시 0.
+  Vector2 gravity = Vector2.zero();
+
   final SwimBehavior _swim;
   double _facing = 0; // 진행 방향(rad)
   bool _facingLeft = false; // 좌우 반전 상태 (히스테리시스로 유지)
@@ -51,6 +54,7 @@ class FishComponent extends PositionComponent {
   void update(double dt) {
     super.update(dt);
     _swim.speedFactor = species.emotion.speedFactor(mood);
+    _swim.gravity = gravity; // 기울기 쏠림 주입
     // 게임 화면 영역 안에서 헤엄. 게임 크기를 경계로 사용.
     final bounds = findGame()?.size ?? Vector2(360, 640);
     _facing = _swim.update(dt, position, bounds);
@@ -72,10 +76,17 @@ class FishComponent extends PositionComponent {
     _tailPhase += dt * 8; // 꼬리 흔들림
   }
 
+  /// 헤엄 가능 영역 설정(게임이 매 프레임 주입): 수면 아래 ~ 바텀 네비 위.
+  void setSwimArea(double top, double bottom) {
+    _swim.minY = top;
+    _swim.maxY = bottom;
+  }
+
   /// 짧은 탭: 탭 지점으로 호기심 있게 다가옴 (§6 Phase 0, C안).
   void onTouchApproach(Vector2 worldPoint) {
+    final bounds = findGame()?.size ?? Vector2(360, 640);
     _swim.applyStimulus(
-      target: worldPoint,
+      target: _swim.clampToArea(worldPoint, bounds), // 물 밖/네비 아래로 못 감
       duration: TouchResponse.approachDuration,
       speedFactor: TouchResponse.approachSpeed,
     );
@@ -86,7 +97,7 @@ class FishComponent extends PositionComponent {
     final bounds = findGame()?.size ?? Vector2(360, 640);
     final flee = TouchResponse.fleeTarget(position, worldPoint, bounds);
     _swim.applyStimulus(
-      target: flee,
+      target: _swim.clampToArea(flee, bounds), // 영역 안으로 제한
       duration: TouchResponse.fleeDuration,
       speedFactor: TouchResponse.fleeSpeed,
     );
@@ -201,5 +212,18 @@ class FishComponent extends PositionComponent {
       Rect.fromLTWH(center.dx - 25, center.dy - r - 8, n, 3),
       Paint()..color = const Color(0xFFFF9500),
     );
+
+    // 6) 기울기 중력 방향(시안). 실기기에서 좌우/상하 부호 튜닝용.
+    if (gravity.length2 > 0) {
+      final gEnd = center + Offset(gravity.x, gravity.y);
+      canvas.drawLine(
+        center,
+        gEnd,
+        Paint()
+          ..color = const Color(0xFF00E5FF)
+          ..strokeWidth = 3,
+      );
+      canvas.drawCircle(gEnd, 3, Paint()..color = const Color(0xFF00E5FF));
+    }
   }
 }

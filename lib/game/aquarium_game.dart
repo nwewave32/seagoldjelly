@@ -1,6 +1,5 @@
-import 'package:flame/components.dart';
 import 'package:flame/game.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../data/models/species.dart';
 import 'components/fish_component.dart';
@@ -8,14 +7,19 @@ import 'components/water_effects.dart';
 
 /// FlameGame 본체 (§3). 어항 + 금붕어.
 ///
-/// Phase 0 셋업 수준: 종 데이터로 만든 금붕어 1마리를 띄워 렌더가 도는지 확인.
-/// 터치/기울기/경계 정교화·fps 게이트 검증은 Phase 0 본구현에서.
+/// Phase 0: 종 데이터로 만든 금붕어 1마리 + 터치 반응(C안).
+/// 입력은 화면 위젯의 GestureDetector(aquarium_screen)에서 받아
+/// 아래 public 핸들러로 좌표를 넘긴다 — Flame 이벤트 시스템 우회로 가장 안정적.
+///
+/// 좌표계: 금붕어는 게임 루트(스크린 좌표, 논리픽셀)에 있고, GestureDetector의
+/// localPosition도 동일 논리픽셀이라 그대로 매핑된다.
 class AquariumGame extends FlameGame {
   AquariumGame({required this.species});
 
   final Species species;
 
   late FishComponent _fish;
+  bool _ready = false;
 
   @override
   Color backgroundColor() => const Color(0xFF0A1A2F);
@@ -31,11 +35,17 @@ class AquariumGame extends FlameGame {
       startPosition: size / 2,
     );
     add(_fish);
+
+    _ready = true;
   }
 
-  /// Phase 0: 화면 탭 시 금붕어가 그쪽으로 향하도록(자리표시).
-  /// 본구현에서 TouchResponse와 연결.
-  void onTapAt(Vector2 worldPoint) {
-    // TODO(Phase 0): touch_response 결합.
+  /// 짧은 탭 → 그 지점으로 다가옴.
+  void approachAt(Offset p) {
+    if (_ready) _fish.onTouchApproach(Vector2(p.dx, p.dy));
+  }
+
+  /// 길게 누름·드래그 → 그 지점에서 흩어짐.
+  void scatterAt(Offset p) {
+    if (_ready) _fish.onTouchScatter(Vector2(p.dx, p.dy));
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../data/models/species.dart';
 import '../behaviors/swim_behavior.dart';
+import '../behaviors/touch_response.dart';
 
 /// 종 데이터로 구동되는 개체 컴포넌트 (§3, §1-3 하드코딩 금지).
 ///
@@ -69,6 +70,26 @@ class FishComponent extends PositionComponent {
 
     if (_flipFlash > 0) _flipFlash -= dt;
     _tailPhase += dt * 8; // 꼬리 흔들림
+  }
+
+  /// 짧은 탭: 탭 지점으로 호기심 있게 다가옴 (§6 Phase 0, C안).
+  void onTouchApproach(Vector2 worldPoint) {
+    _swim.applyStimulus(
+      target: worldPoint,
+      duration: TouchResponse.approachDuration,
+      speedFactor: TouchResponse.approachSpeed,
+    );
+  }
+
+  /// 길게 누름·드래그: 자극에서 놀라 흩어짐 (§6 Phase 0, C안).
+  void onTouchScatter(Vector2 worldPoint) {
+    final bounds = findGame()?.size ?? Vector2(360, 640);
+    final flee = TouchResponse.fleeTarget(position, worldPoint, bounds);
+    _swim.applyStimulus(
+      target: flee,
+      duration: TouchResponse.fleeDuration,
+      speedFactor: TouchResponse.fleeSpeed,
+    );
   }
 
   @override

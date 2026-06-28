@@ -17,7 +17,7 @@ class FishComponent extends PositionComponent {
     required this.species,
     required Vector2 startPosition,
     this.mood = Mood.calm,
-    this.debug = true, // P0-001 디버그 시각화. 원인 확인 후 false로.
+    this.debug = false, // P0-001 디버그 시각화. 원인 확인 후 false로.
   })  : _swim = SwimBehavior(profile: species.swim),
         super(
           position: startPosition,

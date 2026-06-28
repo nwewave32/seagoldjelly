@@ -60,8 +60,11 @@ class _AquariumScreenState extends ConsumerState<AquariumScreen> {
                       label: '호흡',
                       onTap: () => _game.toggleBreathing(),
                     ),
-                    const _ActionPlaceholder(
-                        icon: Icons.music_note, label: '사운드'),
+                    _ActionPlaceholder(
+                      icon: Icons.bedtime,
+                      label: '수면',
+                      onTap: () => _game.toggleSleepTimer(),
+                    ),
                     const _ActionPlaceholder(icon: Icons.settings, label: '설정'),
                   ],
                 ),

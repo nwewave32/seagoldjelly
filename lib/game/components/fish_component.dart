@@ -36,6 +36,9 @@ class FishComponent extends PositionComponent {
   /// 들숨 때 활발(↑) → 멈춤/날숨 때 느긋(↓).
   double breathFactor = 1.0;
 
+  /// 잠듦 진행에 따른 속도 배율(게임이 주입). 깨어있으면 1.0, 잠들면 ~0.1.
+  double sleepFactor = 1.0;
+
   final SwimBehavior _swim;
   double _facing = 0; // 진행 방향(rad)
   bool _facingLeft = false; // 좌우 반전 상태 (히스테리시스로 유지)
@@ -57,7 +60,8 @@ class FishComponent extends PositionComponent {
   @override
   void update(double dt) {
     super.update(dt);
-    _swim.speedFactor = species.emotion.speedFactor(mood) * breathFactor;
+    _swim.speedFactor =
+        species.emotion.speedFactor(mood) * breathFactor * sleepFactor;
     _swim.gravity = gravity; // 기울기 쏠림 주입
     // 게임 화면 영역 안에서 헤엄. 게임 크기를 경계로 사용.
     final bounds = findGame()?.size ?? Vector2(360, 640);

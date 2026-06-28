@@ -1,0 +1,51 @@
+name: seagoldjelly
+description: "잠드는 어항 — 금붕어와 호흡·사운드로 밤마다 재우는 iOS 우선 구독 앱."
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # 게임/렌더 레이어 (§2)
+  flame: ^1.18.0
+
+  # 상태관리 — 솔로 개발이므로 단순하게 (§2)
+  flutter_riverpod: ^2.5.1
+
+  # 로컬 저장 (§2)
+  shared_preferences: ^2.2.3   # 간단한 상태
+  hive: ^2.2.3                  # 구조적 데이터
+  hive_flutter: ^1.1.0
+
+  # 오디오 — 루프 + 페이드아웃 (§2)
+  just_audio: ^0.9.40
+
+  # 센서 — 기울기(가속도계) 반응 (§2)
+  sensors_plus: ^5.0.1
+
+  # 결제 — RevenueCat, 구독 + 7일 무료체험 (§2). Phase 3에서 실제 연동.
+  purchases_flutter: ^8.0.0
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.11
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/audio/
+    - assets/images/
+
+  # NOTE(Phase 0): 종 비주얼은 코드 도형(플레이스홀더)으로 시작.
+  # 스프라이트 도입 시 위 assets/images/ 아래에 추가하고 fish_component.dart 교체.

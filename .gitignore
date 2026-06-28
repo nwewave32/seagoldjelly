@@ -1,0 +1,48 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.g.dart.lock
+# 참고: 앱이므로 pubspec.lock은 커밋함(재현성). 라이브러리였다면 무시.
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Runner/GeneratedPluginRegistrant.*
+**/DerivedData/
+*.mode1v3
+*.mode2v3
+*.pbxuser
+*.perspectivev3
+xcuserdata/
+
+# Android
+android/.gradle/
+android/local.properties
+android/key.properties
+**/*.keystore
+
+# macOS
+.DS_Store
+
+# 테스트 커버리지 산출물
+coverage/
+
+# 일회성 git 부트스트랩 헬퍼 (커밋 불필요)
+git_bootstrap.sh
+
+# Misc
+*.log

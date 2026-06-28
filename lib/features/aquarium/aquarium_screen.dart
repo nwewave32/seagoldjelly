@@ -45,19 +45,24 @@ class _AquariumScreenState extends ConsumerState<AquariumScreen> {
             ),
           ),
 
-          // 자리표시 오버레이: 코어 루프 진입점(§5). 각 화면은 Phase별 구현.
-          const Align(
+          // 코어 루프 진입점(§5). 호흡만 연결됨, 나머지는 Phase별 구현.
+          Align(
             alignment: Alignment.bottomCenter,
             child: SafeArea(
               child: Padding(
-                padding: EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: 16),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _ActionPlaceholder(icon: Icons.set_meal, label: '먹이'),
-                    _ActionPlaceholder(icon: Icons.air, label: '호흡'),
-                    _ActionPlaceholder(icon: Icons.music_note, label: '사운드'),
-                    _ActionPlaceholder(icon: Icons.settings, label: '설정'),
+                    const _ActionPlaceholder(icon: Icons.set_meal, label: '먹이'),
+                    _ActionPlaceholder(
+                      icon: Icons.air,
+                      label: '호흡',
+                      onTap: () => _game.toggleBreathing(),
+                    ),
+                    const _ActionPlaceholder(
+                        icon: Icons.music_note, label: '사운드'),
+                    const _ActionPlaceholder(icon: Icons.settings, label: '설정'),
                   ],
                 ),
               ),
@@ -70,20 +75,39 @@ class _AquariumScreenState extends ConsumerState<AquariumScreen> {
 }
 
 class _ActionPlaceholder extends StatelessWidget {
-  const _ActionPlaceholder({required this.icon, required this.label});
+  const _ActionPlaceholder({
+    required this.icon,
+    required this.label,
+    this.onTap,
+  });
 
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, color: Colors.white70),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.white54, fontSize: 12)),
-      ],
+    final active = onTap != null;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: active ? Colors.white : Colors.white38),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: active ? Colors.white70 : Colors.white38,
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

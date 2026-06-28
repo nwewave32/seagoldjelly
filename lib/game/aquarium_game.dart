@@ -4,8 +4,11 @@ import 'package:flame/game.dart';
 import 'package:flutter/widgets.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
+import '../data/models/breathing_program.dart';
 import '../data/models/species.dart';
+import '../features/breathing/breathing_session.dart';
 import 'behaviors/tilt_response.dart';
+import 'components/breathing_guide.dart';
 import 'components/fish_component.dart';
 import 'components/water_effects.dart';
 
@@ -22,9 +25,15 @@ class AquariumGame extends FlameGame {
 
   final Species species;
 
-  late FishComponent _fish;
-  late WaterEffects _water;
+  late FishComponent _fish; // size가 필요해 onLoad에서 생성
+  // hot reload 시에도 안전하도록 선언과 동시에 초기화(late 미초기화 방지).
+  final WaterEffects _water = WaterEffects();
+  final BreathingGuide _guide = BreathingGuide();
   bool _ready = false;
+
+  // 호흡 세션(§6 Phase 1). null이면 비활성.
+  BreathingSession? _breath;
+  bool get isBreathing => _breath?.isRunning ?? false;
 
   // 기울기(가속도계) 반응.
   final TiltResponse _tilt = TiltResponse();
@@ -41,7 +50,6 @@ class AquariumGame extends FlameGame {
   Future<void> onLoad() async {
     await super.onLoad();
 
-    _water = WaterEffects();
     add(_water);
 
     _fish = FishComponent(
@@ -49,6 +57,8 @@ class AquariumGame extends FlameGame {
       startPosition: size / 2,
     );
     add(_fish);
+
+    add(_guide);
 
     // 가속도계 구독(중력 포함). 시뮬레이터엔 센서가 없어 콜백이 안 와도
     // gravity는 0으로 유지되어 안전하다.
@@ -75,10 +85,37 @@ class AquariumGame extends FlameGame {
       final top = h * WaterEffects.surfaceFrac + 8;
       final bottom = h - bottomUiInset;
       _fish.setSwimArea(top, bottom > top ? bottom : h - _edgeFallback);
+
+      // 호흡 세션: 진행 → 금붕어 속도·가이드 싱크. 완료 시 정지.
+      final b = _breath;
+      if (b != null) {
+        if (b.isRunning) {
+          b.tick(dt);
+          final st = b.state;
+          _fish.breathFactor = 0.35 + 0.65 * st.expansion; // 들숨↑ 날숨↓
+          _guide
+            ..visible = true
+            ..expansion = st.expansion;
+        }
+        if (b.isComplete) stopBreathing();
+      }
     }
   }
 
   static const double _edgeFallback = 80;
+
+  /// 하단 '호흡' 버튼에서 호출. 켜져 있으면 끄고, 아니면 시작.
+  void toggleBreathing() => isBreathing ? stopBreathing() : startBreathing();
+
+  void startBreathing() {
+    _breath = BreathingSession(BreathingProgram.fourSevenEight)..start();
+  }
+
+  void stopBreathing() {
+    _breath = null;
+    _fish.breathFactor = 1.0;
+    _guide.visible = false;
+  }
 
   @override
   void onRemove() {

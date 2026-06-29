@@ -24,6 +24,7 @@ dependencies:
 
   # 오디오 — 루프 + 페이드아웃 (§2)
   just_audio: ^0.9.40
+  audio_session: ^0.1.18 # 재생 카테고리 설정(무음 스위치 무시 등)
 
   # 센서 — 기울기(가속도계) 반응 (§2)
   sensors_plus: ^5.0.1

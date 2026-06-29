@@ -15,11 +15,12 @@ class SoundTrack {
   final String assetPath;
   final bool isPremium;
 
-  // NOTE: 실제 파일은 라이선스 확보 후 추가(§9). 아래는 자리표시 정의.
-  static const SoundTrack waterLoop = SoundTrack(
-    id: 'water_loop',
-    displayName: '잔잔한 물소리',
-    assetPath: 'audio/water_loop.mp3',
+  /// v1 무료 기본 트랙. assetPath는 just_audio 자산 키(pubspec assets/audio/).
+  /// ⚠️ 라이선스 출처는 assets/audio/CREDITS.md에 기록할 것(§9).
+  static const SoundTrack stillWaters = SoundTrack(
+    id: 'still_waters',
+    displayName: 'Beneath the Still Waters',
+    assetPath: 'assets/audio/Beneath_The_Still_Waters.mp3',
     isPremium: false,
   );
 }

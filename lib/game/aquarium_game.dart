@@ -5,8 +5,10 @@ import 'package:flutter/widgets.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 
 import '../data/models/breathing_program.dart';
+import '../data/models/sound_track.dart';
 import '../data/models/species.dart';
 import '../features/breathing/breathing_session.dart';
+import '../services/audio_service.dart';
 import 'behaviors/tilt_response.dart';
 import 'components/breathing_guide.dart';
 import 'components/fish_component.dart';
@@ -38,8 +40,10 @@ class AquariumGame extends FlameGame {
   bool _sleeping = false; // 잠듦 램프 진행 중.
   double _sleepProgress = 0; // 0 깨어있음 ~ 1 잠듦.
 
-  /// 데모용 수면 타이머 길이(초). 설정 연동은 Phase 4(§4), 무료 15분 제한 §7.
-  static const double kSleepTimerSeconds = 8;
+  /// 수면 타이머 길이(초). 무료 15분(§7). 설정 연동은 Phase 4(§4).
+  /// 이 시간 동안 사운드가 끊김 없이 반복 재생되다가, 만료 시 페이드아웃.
+  /// (잠듦 연출만 빠르게 테스트하려면 일시적으로 작은 값으로 낮추면 됨)
+  static const double kSleepTimerSeconds = 15 * 60;
   static const double _sleepRampSeconds = 4; // 잠드는 연출 길이.
 
   bool get isSleepActive => _sleeping || _sleepTimerRemaining != null;
@@ -51,6 +55,9 @@ class AquariumGame extends FlameGame {
   // 기울기(가속도계) 반응.
   final TiltResponse _tilt = TiltResponse();
   StreamSubscription<AccelerometerEvent>? _accelSub;
+
+  // 사운드(§6 Phase 1). 수면 흐름과 함께 재생되고 잠들 때 페이드아웃.
+  final AudioService _audio = JustAudioService();
 
   /// 화면 위젯(aquarium_screen)에서 주입하는 바텀 네비 영역 높이(px).
   /// 금붕어가 그 아래로 못 내려가게 한다.
@@ -126,7 +133,10 @@ class AquariumGame extends FlameGame {
       if (next <= 0) {
         _sleepTimerRemaining = null;
         _sleeping = true;
-        // TODO(사운드): audioService.fadeOutAndStop(_sleepRampSeconds) 연결.
+        // 잠들기 시작 → 사운드도 같은 길이로 페이드아웃(§5).
+        _audio.fadeOutAndStop(
+          Duration(milliseconds: (_sleepRampSeconds * 1000).round()),
+        );
       } else {
         _sleepTimerRemaining = next;
       }
@@ -149,6 +159,8 @@ class AquariumGame extends FlameGame {
   void startSleepTimer(double seconds) {
     _sleepTimerRemaining = seconds;
     _sleeping = false;
+    // 사운드 루프 재생(§7 무료 1종). 잠들 때 위에서 페이드아웃됨.
+    _audio.playLoop(SoundTrack.stillWaters.assetPath, volume: 0.8);
   }
 
   /// 타이머 없이 즉시 잠듦(예: 호흡 세션 완료 후 연결 가능).
@@ -163,6 +175,7 @@ class AquariumGame extends FlameGame {
     _sleepProgress = 0;
     _fish.sleepFactor = 1.0;
     _sleepOverlay.opacity = 0;
+    _audio.stop();
   }
 
   /// 하단 '호흡' 버튼에서 호출. 켜져 있으면 끄고, 아니면 시작.
@@ -181,6 +194,7 @@ class AquariumGame extends FlameGame {
   @override
   void onRemove() {
     _accelSub?.cancel();
+    _audio.dispose();
     super.onRemove();
   }
 

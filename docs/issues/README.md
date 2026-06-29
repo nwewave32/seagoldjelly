@@ -55,4 +55,14 @@ docs/issues/
 
 | ID | Phase | 제목 | Severity | Status |
 |---|---|---|---|---|
-| [P0-001](./phase-0.md#p0-001--물고기-좌우-반전이-빠르게-깜빡임-facing-flicker) | 0 | 물고기 좌우 반전 깜빡임 | Medium | Verified |
+| [P0-001](./phase-0.md) | 0 | 물고기 좌우 반전 깜빡임 | Medium | Verified |
+| [P1-001](./phase-1.md) | 1 | 호흡 가이드 late 미초기화 크래시 | High | Verified |
+| [P1-002](./phase-1.md) | 1 | 사운드 무재생(오디오 세션) | High | Verified |
+| [P1-003](./phase-1.md) | 1 | 사운드 너무 짧게 재생(타이머 8s) | Medium | Verified |
+| [P1-004](./phase-1.md) | 1 | DI 미배선 + Consumer ref 미사용 | Medium | Open |
+| [P1-005](./phase-1.md) | 1 | 호흡↔수면 상호배제 없음 | Medium | Open |
+| [P1-006](./phase-1.md) | 1 | 경계↔UI 바 매직넘버 중복 | Low~Med | Open |
+| [P1-007](./phase-1.md) | 1 | 디버그 렌더 코드 상주 | Low | Open |
+| [P1-008](./phase-1.md) | 1 | 틸트 스무딩 dt 비독립 | Low | Open |
+| [P1-009](./phase-1.md) | 1 | mood↔FishState 미연결 | Low | Open(P2) |
+| [P1-010](./phase-1.md) | 1 | 연출 매직넘버 산재 | Low | Open(P4) |
